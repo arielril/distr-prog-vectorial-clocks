@@ -1,0 +1,37 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+IMAGE = "debian/buster64"
+HCOUNT = 3
+
+Vagrant.configure("2") do |config|
+
+  (1..HCOUNT).each do |host_id| 
+    config.vm.define "host-#{host_id}" do |host| 
+      ENV["LC_ALL"] = "en_US.UTF-8"
+
+      host.vm.box = IMAGE 
+      host.vm.hostname = "host#{host_id}"
+
+      # ip starts at [192.168.35.10] - host 1
+      host.vm.network "private_network", ip: "192.168.35.#{host_id+9}"
+      host.vm.synced_folder "../data/", "/home/vagrant/code",
+        type: "rsync",
+        rsync__exclude: ["__pycache__", "/env", ".editorconfig"]
+
+      host.vm.provider "virtualbox" do |vb|
+        vb.gui = false
+        vb.memory = "1024"
+        vb.cpus = 1
+      end
+
+      # install needed software and configs
+      host.vm.provision "shell", path: "../scripts/boot.sh"
+
+      host.vm.provision "shell", path: "../scripts/alias.sh", run: "always"
+
+
+    end
+  end
+
+end
