@@ -11,8 +11,23 @@ class Node:
     multicast_group = ("224.1.1.1", 8888)
     start_message = "start_bitches"
 
-    def __init__(self):
-        print("constructed :)")
+    def __init__(
+        self,
+        id,
+        local_ip,
+        local_port,
+        event_chance,
+        event_quantity,
+        min_delay,
+        max_delay,
+    ):
+        self.id = id
+        self.local_ip = local_ip
+        self.local_port = local_port
+        self.event_chance = event_chance
+        self.event_quantity = event_quantity
+        self.min_delay = min_delay
+        self.max_delay = max_delay
 
     def start(self):
         print("started =P")
