@@ -29,8 +29,6 @@ class Node:
 
         s.bind(self.multicast_group)
 
-        # host = socket.gethostbyname(socket.gethostname())
-        # s.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_IF, socket.inet_aton(host))
         s.setsockopt(
             socket.IPPROTO_IP,
             socket.IP_ADD_MEMBERSHIP,
