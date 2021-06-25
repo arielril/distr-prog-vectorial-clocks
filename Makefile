@@ -1,5 +1,7 @@
+PID=0
+
 start:
-  python starter.py
+	@python ./data/starter.py 
 
 run:
-  python index.py
+	@python ./data/index.py -c data/config --id $(PID)
