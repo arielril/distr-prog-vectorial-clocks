@@ -49,7 +49,7 @@ class Node:
         old_clock = self.clock
         self.clock = max(self.clock, remote_clock)
 
-        print(f"[node.update_clock] clock update from ({old_clock}) to ({self.clock})")
+        # print(f"[node.update_clock] clock update from ({old_clock}) to ({self.clock})")
 
     def interact(self):
         while (len(self.local_events) + len(self.message_events)) < self.event_quantity:
@@ -66,7 +66,7 @@ class Node:
         self.die = True
 
     def send_message(self):
-        print(f"sending message to someone ({len(self.message_events)})")
+        # print(f"sending message to someone ({len(self.message_events)})")
         dst_node_id = random.choice(list(self.node_locations.keys()))
         chosen_node = self.node_locations[dst_node_id]
 
@@ -89,16 +89,19 @@ class Node:
                 "dst_node": dst_node_id,
             }
         )
+        print(f"{self.id} [{clock}] S {dst_node_id}")
 
     def send_local_event(self):
         self.increment_clock()
         clock = self.retrieve_clock()
-        print(f"sending local event ({len(self.local_events)})")
+        # print(f"sending local event ({len(self.local_events)})")
         self.local_events.append(
             {
                 "clock": clock,
             }
         )
+        local_clocks = [x["clock"] for x in self.local_events]
+        print(f"{self.id} {local_clocks} L")
 
     def listen(self):
         print("listening =P")
@@ -134,16 +137,47 @@ class Node:
                     # received message from me :(
                     continue
 
-                print(
-                    f"[node.listen] received message: ({orig}, {dst}, {clock}, {msg})"
-                )
+                if dst != self.id:
+                    continue
+
+                # print(
+                #     f"[node.listen] received message: ({orig}, {dst}, {clock}, {msg})"
+                # )
                 self.update_clock(int(clock, 10))
+                self.received_messages.append(
+                    {
+                        "sender_id": orig,
+                        "clock": self.retrieve_clock(),
+                        "received_clock": clock,
+                    }
+                )
+                print(f"{self.id} [{self.retrieve_clock()}] R {orig} {clock}")
             except socket.timeout as e:
                 print(f"[node.listen] socket timedout")
                 return
 
     def get_sleep_time(self):
         return random.randrange(self.min_delay, self.max_delay, 1) / 1000
+
+    def show_results(self):
+        print("showing results...\n")
+        print("\n---------------------------DONE-------------------------------")
+
+        local_clocks = [x["clock"] for x in self.local_events]
+        print(f"{self.id} {local_clocks} L")
+
+        generated_msg_events = {}
+        for event in self.message_events:
+            if event["dst_node"] not in generated_msg_events:
+                generated_msg_events[event["dst_node"]] = []
+            generated_msg_events[event["dst_node"]].append(event["clock"])
+
+        for k, v in generated_msg_events.items():
+            print(f"{self.id} {v} S {k}")
+
+        received_msgs = {}
+        for event in self.received_messages:
+            pass
 
     def await_start(self):
         print("awaiting start...")

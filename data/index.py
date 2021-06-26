@@ -110,6 +110,9 @@ if __name__ == "__main__":
         interact_thread.start()
 
         interact_thread.join()
+        listen_thread.join()
+
+        # actual_node.show_results()
 
     except KeyboardInterrupt:
         pass
