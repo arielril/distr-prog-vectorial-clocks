@@ -2,7 +2,7 @@
 # vi: set ft=ruby :
 
 IMAGE = "debian/buster64"
-HCOUNT = 3
+HCOUNT = 2
 
 Vagrant.configure("2") do |config|
 
