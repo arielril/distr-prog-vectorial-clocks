@@ -102,17 +102,14 @@ if __name__ == "__main__":
 
         threads = []
         listen_thread = threading.Thread(target=node_listen, args=(actual_node,))
-        threads.append(listen_thread)
 
         interact_thread = threading.Thread(target=node_interact, args=(actual_node,))
-        threads.append(interact_thread)
 
         actual_node.await_start()
-        for t in threads:
-            t.start()
+        listen_thread.start()
+        interact_thread.start()
 
-        for t in threads:
-            t.join()
+        interact_thread.join()
 
     except KeyboardInterrupt:
         pass
