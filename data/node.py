@@ -1,3 +1,4 @@
+import sys
 import socket
 import binascii
 import struct
@@ -11,6 +12,7 @@ class Node:
     message_events = []
     received_messages = []
     clock = 0
+    vclock = []
 
     multicast_group = ("224.1.1.1", 8888)
     start_message = "start_bitches"
@@ -38,21 +40,35 @@ class Node:
 
     def set_node_locations(self, locations: dict):
         self.node_locations = locations
+        self.init_vec_clock()
+
+    def init_vec_clock(self):
+        node_ids = list(self.node_locations.keys())
+        node_ids.append(self.id)
+        last_id = max([int(i, 10) for i in node_ids])
+        self.vclock = [0 for i in range(last_id)]
 
     def increment_clock(self):
         self.clock += 1
+        self.vclock[int(self.id, 10) - 1] += 1
 
     def retrieve_clock(self):
         return self.clock
 
-    def update_clock(self, remote_clock):
+    def update_clock(self, remote_clock, remote_id):
+        self.vclock[remote_id - 1] = remote_clock
+
         old_clock = self.clock
         self.clock = max(self.clock, remote_clock)
+        self.vclock[int(self.id, 10) - 1] = self.clock
 
         # print(f"[node.update_clock] clock update from ({old_clock}) to ({self.clock})")
 
     def interact(self):
         while (len(self.local_events) + len(self.message_events)) < self.event_quantity:
+            if self.die:
+                return
+
             is_message_event = random.uniform(0, 1) > self.event_chance
 
             time.sleep(self.get_sleep_time())
@@ -89,7 +105,7 @@ class Node:
                 "dst_node": dst_node_id,
             }
         )
-        print(f"{self.id} [{clock}] S {dst_node_id}")
+        print(f"{self.id} {self.vclock} S {dst_node_id}")
 
     def send_local_event(self):
         self.increment_clock()
@@ -98,10 +114,10 @@ class Node:
         self.local_events.append(
             {
                 "clock": clock,
+                "vclock": self.vclock,
             }
         )
-        local_clocks = [x["clock"] for x in self.local_events]
-        print(f"{self.id} {local_clocks} L")
+        print(f"{self.id} {self.vclock} L")
 
     def listen(self):
         print("listening =P")
@@ -143,7 +159,7 @@ class Node:
                 # print(
                 #     f"[node.listen] received message: ({orig}, {dst}, {clock}, {msg})"
                 # )
-                self.update_clock(int(clock, 10))
+                self.update_clock(int(clock, 10), int(orig, 10))
                 self.received_messages.append(
                     {
                         "sender_id": orig,
@@ -151,9 +167,10 @@ class Node:
                         "received_clock": clock,
                     }
                 )
-                print(f"{self.id} [{self.retrieve_clock()}] R {orig} {clock}")
+                print(f"{self.id} {self.vclock} R {orig} {clock}")
             except socket.timeout as e:
                 print(f"[node.listen] socket timedout")
+                self.die = True
                 return
 
     def get_sleep_time(self):

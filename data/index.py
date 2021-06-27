@@ -100,17 +100,16 @@ if __name__ == "__main__":
         node_locations.pop(args.process_id)
         actual_node.set_node_locations(node_locations)
 
-        threads = []
         listen_thread = threading.Thread(target=node_listen, args=(actual_node,))
 
-        interact_thread = threading.Thread(target=node_interact, args=(actual_node,))
+        # interact_thread = threading.Thread(target=node_interact, args=(actual_node,))
 
         actual_node.await_start()
         listen_thread.start()
-        interact_thread.start()
 
-        interact_thread.join()
-        listen_thread.join()
+        node_interact(actual_node)
+        sys.exit(0)
+        # listen_thread.join()
 
         # actual_node.show_results()
 
